@@ -1,0 +1,37 @@
+date,.model,bound,mf_underway
+2025 Jul,Regression,lower,709.6075330897381
+2025 Jul,Regression,upper,959.3884637726389
+2025 Aug,Regression,lower,712.5421241592978
+2025 Aug,Regression,upper,963.2484700598329
+2025 Sep,Regression,lower,668.5779970174023
+2025 Sep,Regression,upper,918.9793580556849
+2025 Jul,Pure ar(1),lower,679.5558254147232
+2025 Jul,Pure ar(1),upper,705.4182892875971
+2025 Aug,Pure ar(1),lower,660.5365103103338
+2025 Aug,Pure ar(1),upper,709.4425837907402
+2025 Sep,Pure ar(1),lower,645.6291208085887
+2025 Sep,Pure ar(1),upper,716.2697011693698
+2025 Jul,ar(1) + All Factors,lower,678.8040036666226
+2025 Jul,ar(1) + All Factors,upper,703.0513362654664
+2025 Aug,ar(1) + All Factors,lower,658.2787294533055
+2025 Aug,ar(1) + All Factors,upper,705.0962367927168
+2025 Sep,ar(1) + All Factors,lower,641.8562946272647
+2025 Sep,ar(1) + All Factors,upper,710.6075927682567
+2025 Jul,Pure ar(2),lower,676.4787572887253
+2025 Jul,Pure ar(2),upper,700.8875867320965
+2025 Aug,Pure ar(2),lower,654.732368171002
+2025 Aug,Pure ar(2),upper,696.8434070645924
+2025 Sep,Pure ar(2),lower,634.5892517800637
+2025 Sep,Pure ar(2),upper,697.330386796986
+2025 Jul,ar(2) + All Factors,lower,676.4039429098384
+2025 Jul,ar(2) + All Factors,upper,699.5725092991636
+2025 Aug,ar(2) + All Factors,lower,653.5019927068921
+2025 Aug,ar(2) + All Factors,upper,694.414467082726
+2025 Sep,ar(2) + All Factors,lower,633.6701058052904
+2025 Sep,ar(2) + All Factors,upper,694.9817067123524
+2025 Jul,ar(2) + Select Factors,lower,677.1067415916814
+2025 Jul,ar(2) + Select Factors,upper,700.3158098269464
+2025 Aug,ar(2) + Select Factors,lower,654.7471296540692
+2025 Aug,ar(2) + Select Factors,upper,695.5752535634141
+2025 Sep,ar(2) + Select Factors,lower,635.1360391241659
+2025 Sep,ar(2) + Select Factors,upper,696.211446350058

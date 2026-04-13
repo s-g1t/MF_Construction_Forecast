@@ -29,25 +29,26 @@ library(stringr)
 
 # configure the forecast vintage, one MUST remain COMMENTED OUT
 vintage <- c(
-             #"retro"
-             "latest"
+             "retro"
+             #"latest"
              )
 
-vintage_date <- ymd("2024-12-01")
+# the vintage date is the "production" month the forecast would have been run
+vintage_date <- ymd("2025-09-01")
 
 # *************************************************************************************************************************
 # DATA SOURCING
 # *************************************************************************************************************************
 # create a list of urls to download...for the FRED urls we only need certain components
 mf_urls <- list(
-                  mf_underway = list(series_id = "UNDCON5MUSA", freq = "Monthly", cosd = "1970-01-01", coed = "2025-10-01", nd = "1970-01-01"),
-                  total_starts = list(series_id = "HOUST", freq = "Monthly", cosd = "1959-01-01", coed = "2025-10-01", nd = "1959-01-01"),
-                  total_comps = list(series_id = "COMPUTSA", freq = "Monthly", cosd = "1968-01-01", coed = "2025-10-01", nd = "1968-01-01"),
-                  vacancy_rt = list(series_id = "RRVRUSQ156N", freq = "Quarterly", cosd = "1956-01-01", coed = "2025-07-01", nd = "1956-01-01"),
-                  trs10yr_rt = list(series_id = "DGS10", freq = "Daily", cosd = "1970-01-01", coed = "2025-12-30", nd = "1962-01-02"), 
-                  frm30yr_rt = list(series_id = "MORTGAGE30US", freq = "Weekly%2C%20Ending%20Thursday", cosd = "1972-01-01", coed = "2025-12-31", nd = "1971-04-02"),
-                  ppi = list(series_id = "WPUSI012011", freq = "Monthly", cosd = "1970-01-01", coed = "2025-09-01", nd = "1947-01-01"),
-                  hmi = "https://www.nahb.org/-/media/NAHB/news-and-economics/docs/housing-economics/hmi/2025-12/t2-national-hmi-history-202512.xls?rev=a11cabbf14684792a05db551004b789a&hash=2177ACE36DA313DC75B8811821CEF0C7"
+                  mf_underway = list(series_id = "UNDCON5MUSA", freq = "Monthly", cosd = "1970-01-01", coed = "2026-01-01", nd = "1970-01-01"),
+                  total_starts = list(series_id = "HOUST", freq = "Monthly", cosd = "1959-01-01", coed = "2026-01-01", nd = "1959-01-01"),
+                  total_comps = list(series_id = "COMPUTSA", freq = "Monthly", cosd = "1968-01-01", coed = "2026-01-01", nd = "1968-01-01"),
+                  vacancy_rt = list(series_id = "RRVRUSQ156N", freq = "Quarterly", cosd = "1956-01-01", coed = "2026-01-01", nd = "1956-01-01"),
+                  trs10yr_rt = list(series_id = "DGS10", freq = "Daily", cosd = "1970-01-01", coed = "2026-03-31", nd = "1962-01-02"), 
+                  frm30yr_rt = list(series_id = "MORTGAGE30US", freq = "Weekly%2C%20Ending%20Thursday", cosd = "1972-01-01", coed = "2026-03-31", nd = "1971-04-02"),
+                  ppi = list(series_id = "WPUSI012011", freq = "Monthly", cosd = "1970-01-01", coed = "2026-02-01", nd = "1947-01-01"),
+                  hmi = "https://www.nahb.org/-/media/NAHB/news-and-economics/docs/housing-economics/hmi/2026-03/t2-national-hmi-history-202603.xls?rev=2b552d4318914cdc9a4ff257c2fd5959&hash=29606A9050FFC48A7AC571B288F01918"
                   )
 
 # create a blank list to pass the downloaded files into
@@ -110,7 +111,7 @@ mf_vars[[i]] <- read_csv(glue("~/RStudio/FRED/Housing/FRED_{i}.csv")) %>%
 # combine the lists together into a single df and pivot it back into a time-series
 hist.mf_fcast_vars <- pmap_df(list(mf_vars), bind_rows) %>%
                       pivot_wider(names_from = var_desc, values_from = var) %>%
-                      #na.omit() %>%
+                      filter(!is.na(mf_underway)) %>%
                       mutate(cast_desc = "actual") 
 
 # pull the mf factor names into a list from the headers so we can reference them later
@@ -140,7 +141,7 @@ month_vars <- hist.mf_fcast_dummy_vars %>% select(matches("^month_[0-9]+$")) %>%
 lag_list <- list(hmi = 24, total_starts = 12, total_comps = 3, vacancy_rt = 12, trs10yr_rt = 24, frm30yr_rt = 24, ppi = 3)
 
 # pull the end of lag-year target
-target_eoly <- hist.mf_fcast_dummy_vars %>% 
+target_eoly <- hist.mf_fcast_vars %>% 
                filter(date == floor_date(max(date), "year") %m-% months(1)) %>% 
                select(mf_underway) %>% 
                pull()
@@ -175,11 +176,17 @@ sig_list <- c("hmi", "total_comps", "vacancy_rt", "ppi")
 sig_flagcast_vars <- mf_flagcast_vars[str_detect(mf_flagcast_vars, glue_collapse(sig_list, '|'))]
 
 # create the forecast functions
+# multivariate regression with all lagged variables
 ltsm_flagcast <- glue("mf_underway ~ {glue_collapse(mf_flagcast_vars, '+')}")
+# pure ar1 forecast
 pure_ar1_fcast <- glue("mf_underway ~ pdq(1,1,0) + PDQ(0,0,0) + {glue_collapse(month_vars, '+')}")
+# ar1 with all lagged variables
 ar1_all_vars_flagcast <- glue("mf_underway ~ pdq(1,1,0) + PDQ(0,0,0) + {glue_collapse(c(mf_flagcast_vars, month_vars), '+')}")
+# pure ar2 forecast
 pure_ar2_fcast <- glue("mf_underway ~ pdq(2,1,0) + PDQ(0,0,0) + {glue_collapse(month_vars, '+')}")
+# ar2 with all lagged variables
 ar2_all_vars_flagcast <- glue("mf_underway ~ pdq(2,1,0) + PDQ(0,0,0) + {glue_collapse(c(mf_flagcast_vars, month_vars), '+')}")
+# ar2 with significant lagged variables...significance was determined through manual checks
 ar2_sig_vars_flagcast <- glue("mf_underway ~ pdq(2,1,0) + PDQ(0,0,0) + {glue_collapse(c(sig_flagcast_vars, month_vars), '+')}")
 
 # *************************************************************************************************************************
